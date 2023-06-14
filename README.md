@@ -107,7 +107,7 @@ Once you have received the unlock key, you apply it like:
 AT+QADBKEY="0jXKXQwSwMxYoeg"
 ```
 
-Then, to actually enable ADB, run `AT+QCFG="usbcfg"`, take the output, change the second-to-last 0 to 1, and then send the new usbcfg string to the modem:
+Then, to actually enable ADB, run `AT+QCFG="usbcfg"`, take the output, change the second-to-last 0 to 1, and then send the new usbcfg string to the modem (do _NOT_ just copy/paste what's below; the USB VID/PID for your modem are very likely different):
 ```
 AT+QCFG="usbcfg"
 +QCFG: "usbcfg",0x2C7C,0x0801,1,1,1,1,1,0,0 // Initial response
