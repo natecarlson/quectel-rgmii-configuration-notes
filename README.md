@@ -55,7 +55,7 @@ AT+QETH="eth_at","enable"
 
 If you enabled AT over Ethernet, anyone behind the modem will be able to send whatever AT commands they want to it -- there is no authentication for the protocol. Just to warn ya.
 
-Their interface is not like the Netgear Nighthawk interface, where you can just telnet into the port and start issuing commands; they use a not-complex-but-not-telnet protocol. They don't have official docs on it, and just released a sample C application. I have a hacked-up Python script that is a bit easier to use, available at: 
+Their interface is not like the Netgear Nighthawk interface, where you can just telnet into the port and start issuing commands; they use a not-complex-but-not-telnet protocol. They don't have official docs on it, and just released a sample C application. I have a hacked-up Python script that is a bit easier to use, available at:
 https://github.com/natecarlson/quectel-rgmii-at-command-client
 
 ## Enabling IP Passthrough
@@ -113,7 +113,7 @@ There are plenty of reasons that you might need to change the IP of the modem.. 
 
 WARNING: You're modifying files on the modem's root filesystem here. If you break it, you buy it, and can keep both pieces!
 
-1. Log into the modem via `adb shell` (If you have multiple modems connected via USB that have ADB enabled, you can get a list of modems with `adb devices`, and connect to the one you want via `adb -s \<number\> shell`)
+1. Log into the modem via `adb shell` (If you have multiple modems connected via USB that have ADB enabled, you can get a list of modems with `adb devices`, and connect to the one you want via `adb -s <number> shell`)
 2. Change to the `/etc` directory
 3. Open `/etc/data/mobileap_cfg.xml` in an editor, and change each occurence of 192.168.225 to whatever you want - for mine, I just went to 192.168.226.
 4. Exit ADB, and reboot the router with `AT+CFUN=1,1`
@@ -123,4 +123,33 @@ Note that the 192.168.225.1 address is also referenced in `/etc/ql_nf_preload.co
 ## TTL Modification
 This is a Linux router using iptables - so you can add iptables rules to override the outgoing TTL. Certain cell plans may require this for various reasons.
 
-> :warning: **TODO**: Finish filling out this section!
+Files:
+* `files/ttl-override`: A simple shell script to start/stop the TTL override. Set the desired TTL with the 'TTL=' at the top of the script.
+* `files/ttl-override.service`: A systemd service to start said script
+
+To install:
+
+* Mount the root filesystem read-write:
+```
+adb shell mount -o remount,rw /
+```
+* Push the files to the system:
+```
+adb push ttl-override /etc/initscripts
+adb push ttl-override.service /lib/systemd/system
+```
+* symlink the systemd unit, reload systemd, start the service, and remount root as ro again:
+```
+adb shell ln -s ln -s /lib/systemd/system/ttl-override.service /lib/systemd/system/multi-user.target.wants/
+adb shell systemctl daemon-reload
+adb shell systemctl start ttl-override
+adb shell mount -o remount,ro /
+```
+* Reboot the system with `AT+CFUN=1,1`.
+* After it comes back up, you can verify the TTL:
+```
+adb shell iptables -t mangle -vnL | grep TTL
+ 1720  107K TTL        all  --  *      rmnet+  0.0.0.0/0            0.0.0.0/0            TTL set to 65
+ adb shell ip6tables -t mangle -vnL | grep HL
+    0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 65
+```
