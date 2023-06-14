@@ -7,6 +7,19 @@ Downsides are that it's more difficult to monitor the connection state, and, wel
 
 > :warning: **WARNING**: This documentation is incomplete! I will try to get back to finish it up later; otherwise, pull requests are accepted!
 
+# Table of Contents
+- [Quectel RGMII Configuration Notes](#quectel-rgmii-configuration-notes)
+- [Table of Contents](#table-of-contents)
+- [Hardware Recommendations](#hardware-recommendations)
+- [Basic configuration](#basic-configuration)
+  - [AT over Ethernet](#at-over-ethernet)
+  - [Enabling IP Passthrough](#enabling-ip-passthrough)
+  - [Specifying a custom APN](#specifying-a-custom-apn)
+- [Advanced configuration](#advanced-configuration)
+  - [Getting ADB Access](#getting-adb-access)
+  - [Changing modem IP address](#changing-modem-ip-address)
+  - [TTL Modification](#ttl-modification)
+
 # Hardware Recommendations
 
 I've only used one adapter personally; it's sold on Aliexpress as "5G M.2 To RJ45", and can either be purchased as a bare board or as a kit including an enclosure, pigtails, and antennas (all of dubious quality.)
