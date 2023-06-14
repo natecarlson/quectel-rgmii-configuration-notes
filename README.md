@@ -111,6 +111,8 @@ Once the modem is back online, you should be able to use ADB to manage the modem
 
 There are plenty of reasons that you might need to change the IP of the modem.. IE, you might have multiple modems connected to the same router for WAN load balancing or bonding, or it might conflict with your internal network IP ranges, or (other reasons.) Unfortunately, Quectel doesn't officially support this, and there is no AT command to do so. However, it's not hard to do.
 
+Make sure you've gained ADB access as described above.
+
 WARNING: You're modifying files on the modem's root filesystem here. If you break it, you buy it, and can keep both pieces!
 
 1. Log into the modem via `adb shell` (If you have multiple modems connected via USB that have ADB enabled, you can get a list of modems with `adb devices`, and connect to the one you want via `adb -s <number> shell`)
@@ -122,6 +124,10 @@ Note that the 192.168.225.1 address is also referenced in `/etc/ql_nf_preload.co
 
 ## TTL Modification
 This is a Linux router using iptables - so you can add iptables rules to override the outgoing TTL. Certain cell plans may require this for various reasons.
+
+Make sure you've gained ADB access as described above.
+
+WARNING: You're modifying files on the modem's root filesystem here. If you break it, you buy it, and can keep both pieces!
 
 Files:
 * `files/ttl-override`: A simple shell script to start/stop the TTL override. Set the desired TTL with the 'TTL=' at the top of the script.
