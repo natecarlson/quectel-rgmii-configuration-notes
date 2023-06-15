@@ -159,6 +159,7 @@ adb push ttl-override.service /lib/systemd/system
 ```
 * symlink the systemd unit, reload systemd, start the service, and remount root as ro again:
 ```
+adb shell chmod +x /etc/initscripts/ttl-override
 adb shell ln -s /lib/systemd/system/ttl-override.service /lib/systemd/system/multi-user.target.wants/
 adb shell systemctl daemon-reload
 adb shell systemctl start ttl-override
