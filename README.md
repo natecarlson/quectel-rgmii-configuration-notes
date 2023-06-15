@@ -206,7 +206,10 @@ WARNING: You're modifying files on the modem's root filesystem here. If you brea
 Note that the 192.168.225.1 address is also referenced in `/etc/ql_nf_preload.conf`; I haven't modified that file and everything seems to work, but just so ya know.
 
 ## TTL Modification
+
 This is a Linux router using iptables - so you can add iptables rules to override the outgoing TTL. Certain cell plans may require this for various reasons.
+
+It's probably worth noting that this will also work for modems connected via a USB enclosure.. what this does is directly change the TTL/HL when packets leave the modem, so it really doesn't matter how it's connected to your network.
 
 Make sure you've gained ADB access as described above.
 
