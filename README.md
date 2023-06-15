@@ -167,8 +167,8 @@ adb shell mount -o remount,ro /
 * Reboot the system with `AT+CFUN=1,1`.
 * After it comes back up, you can verify the TTL:
 ```
-adb shell iptables -t mangle -vnL | grep TTL
+$ adb shell iptables -t mangle -vnL | grep TTL
  1720  107K TTL        all  --  *      rmnet+  0.0.0.0/0            0.0.0.0/0            TTL set to 65
- adb shell ip6tables -t mangle -vnL | grep HL
+$ adb shell ip6tables -t mangle -vnL | grep HL
     0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 65
 ```
