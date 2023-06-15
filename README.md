@@ -12,8 +12,11 @@ Downsides are that it's more difficult to monitor the connection state, and, wel
 - [Table of Contents](#table-of-contents)
 - [Hardware Recommendations](#hardware-recommendations)
 - [Basic configuration](#basic-configuration)
+  - [Additional notes](#additional-notes)
   - [AT over Ethernet](#at-over-ethernet)
   - [Enabling IP Passthrough](#enabling-ip-passthrough)
+    - [QMAP Method](#qmap-method)
+    - [RGMII Method](#rgmii-method)
   - [Specifying a custom APN](#specifying-a-custom-apn)
   - [Changing modem IP address with AT command](#changing-modem-ip-address-with-at-command)
 - [Advanced configuration](#advanced-configuration)
@@ -47,23 +50,32 @@ https://thewirelesshaven.com/shop/modems-hotspots/invisagig/
 
 # Basic configuration
 
-
 It doesn't take much to get this going!
 
 ```
 AT+QCFG="data_interface",1,0
 AT+QCFG="pcie/mode",1
-AT+QETH="eth_driver","r8125"
+AT+QETH="eth_driver","r8125",1
 AT+QMAPWAC=1
 ```
-> :warning: **TODO**: Provide details on what the commands are doing
+
+What these commands do:
+* `AT+QCFG="data_interface"`: Configures network port/diag port communication via PCIe and USB. First parameter is for network communication; 0 is USB and 1 is PCIe. Second parameter is for diagnostics port; only option is 0 for USB.
+* `AT+QCFG="pcie/mode"`: 1 = RC (Root Complex), IE host. 0 = EP (Endpoint), for use in a device that has the RC
+* `AT+QETH="eth_driver","r8125",1`: This configures which ethernet driver to load at module boot. You can run `AT+QETH="eth_driver"` to get a list of options; I believe only one can be enabled. The first parameter is the name of the driver, and the second parameter is a bool to enable or disable.
 
 If you want to be able to send AT commands via Ethernet, you can also add:
 ```
 AT+QETH="eth_at","enable"
 ```
 
+This will enable an AT interface on port 1555. See below section [AT over Ethernet](#at-over-ethernet) for more details.
+
 ..and then reboot the module with `AT+CFUN=1,1`.
+
+## Additional notes
+
+It looks like there are multiple ways to configure these modules. This is the most widely-referenced method I've seen referenced, including in Quectel's documentation for the M.2 EVB board. Similar methods of configuring this feature appear to be `AT+QETH="rgmii"` and various functions of `AT+QMAP`. If someone has a good understanding of which mode to use when, please open an issue or pull request!
 
 ## AT over Ethernet
 
@@ -78,7 +90,49 @@ By default, the modem acts as a true NAT router for IPv4, and serves addresses v
 
 In any case, if you want to pass through the IPv4 (and possibly IPv6? Not sure if the modem passes through the v6 address and lets you use the delegated subnet behind your router or not; I will have to test.) addresses that are assigned, you can!
 
-> :warning: **TODO**: Finish filling out this section!
+As with enabling ethernet mode to start with, it appears there are multiple ways to enable IP Passthrough.
+
+> :warning: **BE CAREFUL**: I haven't managed to get either of these methods to work properly in my testing yet. If you have, feel free to share!
+
+### QMAP Method
+
+> :warning: **BE CAREFUL**: I haven't managed to get either of these methods to work properly in my testing yet. If you have, feel free to share!
+
+This is the method that is documented in the RM520N AT command manual that I have, so I've tested this method.
+
+To enable IP passthrough:
+```
+at+qmap="mpdn_rule",0,1,1,1,1,"FF:FF:FF:FF:FF:FF"
+```
+
+Parameters:
+* First = mPDN rule number, range 0-3 (unless you're doing something complicated, you'll use 0.)
+* Second = APN Profile ID (CGDCONT) to use. You'll probably want 1.
+* Third = IP Passthrough mode. 0 = disabled, 1 = enabled for ethernet, 2 = enabled for WiFi, 3 = enabled for USB-ECM/RNDIS. You'll probably want 1.
+* Fourth = autoconnect. Use 1.
+* Fifth = IPPT Mode. If set to 0, disabled? 1 or 2 make the next field the MAC address you want to pass through to. If you don't specify this, but have IPPT enabled, the first computer to connect will get the pass-through address, and any additional computers will get a private NAT'd IP.
+* Sixth = MAC address to pass through to. `FF:FF:FF:FF:FF:FF` will select the first host that gets a DHCP lease.
+
+
+### RGMII Method
+
+> :warning: **BE CAREFUL**: I haven't managed to get either of these methods to work properly in my testing yet. If you have, feel free to share!
+
+If we were using `AT+QETH="rgmii"` to enable Ethernet mode, we'd probably want to use that for this too. Note that this mode is documented in the AT command guide for the older RM50x modules, and is not documented in the AT command guide for the RM520 modules - at least the versions of the manuals I have.
+
+If you want to go that route, you can try:
+
+```
+AT+QETH="ipptmac",XX:XX:XX:XX:XX:XX
+AT+QETH="rgmii","ENABLE",1,1,1
+```
+* AT+QETH="ipptmac", the first parameter, formatted as `XX:XX:XX:XX:XX:XX`, should be the MAC address of the device you want to receive the IP passthrough.
+* AT+QETH="rgmii":
+  * First parameter is "ENABLE" or "DISABLE", to enable or disable RGMII mode.
+  * Second parameter is the voltage to use for RGMII. `0`=1.8v and `1`=2.5v. I would recommend running `AT+QETH="rgmii"`, and get the current version from the first line it prints: `+QETH: "RGMII","DISABLE",1,-1` -- it's the '1' after the disable.
+  * Third parameter is for IP Passthrough. `-1` = no data call, `0` = COMMON-RGMII (not passthrough), `1` = IP Passthrough-RGMII
+  * Optional fourth parameter is if you want to specify a CGDCONT profile to use for this. `0` = not configured, `1` = configured.
+  * Optional fifth parameter is the CGDCONT profile ID, 1-8.
 
 ## Specifying a custom APN
 
