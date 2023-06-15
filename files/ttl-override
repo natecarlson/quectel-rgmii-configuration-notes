@@ -3,7 +3,7 @@
 set -e
 
 # What value to override the TTL to?
-TTLVALUE=65
+TTLVALUE=64
 
 case "$1" in
 start)

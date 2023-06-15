@@ -213,7 +213,7 @@ Make sure you've gained ADB access as described above.
 WARNING: You're modifying files on the modem's root filesystem here. If you break it, you buy it, and can keep both pieces!
 
 Files:
-* `files/ttl-override`: A simple shell script to start/stop the TTL override. Set the desired TTL with the 'TTL=' at the top of the script.
+* `files/ttl-override`: A simple shell script to start/stop the TTL override. Set the desired TTL with the 'TTLVALUE=' at the top of the script; the default is 64, which will make all packets appear as coming from the modem itself.
 * `files/ttl-override.service`: A systemd service to start said script
 
 To install:
@@ -239,9 +239,9 @@ adb shell mount -o remount,ro /
 * After it comes back up, you can verify the TTL:
 ```
 $ adb shell iptables -t mangle -vnL | grep TTL
- 1720  107K TTL        all  --  *      rmnet+  0.0.0.0/0            0.0.0.0/0            TTL set to 65
+ 1720  107K TTL        all  --  *      rmnet+  0.0.0.0/0            0.0.0.0/0            TTL set to 64
 $ adb shell ip6tables -t mangle -vnL | grep HL
-    0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 65
+    0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 64
 ```
 
 If, for some reason, you want to remove the TTL override, you would need to run:
