@@ -15,6 +15,7 @@ Downsides are that it's more difficult to monitor the connection state, and, wel
   - [AT over Ethernet](#at-over-ethernet)
   - [Enabling IP Passthrough](#enabling-ip-passthrough)
   - [Specifying a custom APN](#specifying-a-custom-apn)
+  - [Changing modem IP address with AT command](#changing-modem-ip-address-with-at-command)
 - [Advanced configuration](#advanced-configuration)
   - [Getting ADB Access](#getting-adb-access)
   - [Changing modem IP address](#changing-modem-ip-address)
@@ -85,6 +86,18 @@ If the modem doesn't automatically connect, it's likely that you need to manuall
 
 > :warning: **TODO**: Finish filling out this section!
 
+## Changing modem IP address with AT command
+
+There are plenty of reasons that you might need to change the IP of the modem.. IE, you might have multiple modems connected to the same router for WAN load balancing or bonding, or it might conflict with your internal network IP ranges, or (other reasons.) On recent modems, Quectel does have a command to do this!
+
+The command is:
+```
+AT+QMAP="LANIP",<dhcp-start>,<dhcp-end>,<router-ip>,<apply?>
+AT+QMAP="LANIP",192.168.227.20,192.168.227.100,192.168.227.1,1
+```
+
+The 'apply?' is if the router should apply the changes immediately, or wait until reboot.
+
 # Advanced configuration
 
 These modems are a full-fledged Linux router under the hood. Once you've got access, you can modify anything you want on the filesystem. It's pretty cool, and also kind of dangerous.. but neat. The access is via 'adb' - the same tool used to do fun stuff to Android phones.
@@ -121,6 +134,9 @@ Once the modem is back online, you should be able to use ADB to manage the modem
 * `adb push /path/to/file` - upload a file to the modem
 
 ## Changing modem IP address
+
+**NOTE**: I am leaving this here for reference sake, but on modern modems, you can indeed change the IP with an AT command. Please reference: [Changing modem IP address with AT command
+](#changing-modem-ip-address-with-at-command)
 
 There are plenty of reasons that you might need to change the IP of the modem.. IE, you might have multiple modems connected to the same router for WAN load balancing or bonding, or it might conflict with your internal network IP ranges, or (other reasons.) Unfortunately, Quectel doesn't officially support this, and there is no AT command to do so. However, it's not hard to do.
 
