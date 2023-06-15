@@ -165,7 +165,7 @@ adb shell systemctl daemon-reload
 adb shell systemctl start ttl-override
 adb shell mount -o remount,ro /
 ```
-* Reboot the system with `AT+CFUN=1,1`.
+* The TTL rules will already be active - but you can reboot the modem with `AT+CFUN=1,1` and verify that the rules are automatically added at startup.
 * After it comes back up, you can verify the TTL:
 ```
 $ adb shell iptables -t mangle -vnL | grep TTL
@@ -173,3 +173,13 @@ $ adb shell iptables -t mangle -vnL | grep TTL
 $ adb shell ip6tables -t mangle -vnL | grep HL
     0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 65
 ```
+
+If, for some reason, you want to remove the TTL override, you would need to run:
+```
+adb shell /etc/initscripts/ttl-override stop
+adb shell mount -o remount,rw /
+adb shell rm -v /etc/initscripts/ttl-override /lib/systemd/system/ttl-override.service /lib/systemd/system/multi-user.target.wants/ttl-override.service
+adb shell mount -o remount,ro /
+adb shell systemctl daemon-reload
+```
+..no need to reboot.
