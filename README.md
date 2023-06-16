@@ -216,7 +216,7 @@ Files:
 * `files/ttl-override`: A simple shell script to start/stop the TTL override. Set the desired TTL with the 'TTL=' at the top of the script.
 * `files/ttl-override.service`: A systemd service to start said script
 
-To install:
+### Installing TTL Override:
 
 * Mount the root filesystem read-write:
 ```
@@ -243,6 +243,18 @@ $ adb shell iptables -t mangle -vnL | grep TTL
 $ adb shell ip6tables -t mangle -vnL | grep HL
     0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 65
 ```
+
+If you want to validate that it's working, you can use "adb shell", and run tcpdump on the network-side interface, specifying that interface's IP as the source (feel free to do that instead of pasting my long ugly string):
+```
+/ # tcpdump -s0 -v -n -i rmnet_data1 src `ip addr show dev rmnet_data1 | grep '^    inet ' | awk '{ print $2 }' | awk -F'/' '{ print $1 }'`
+tcpdump: listening on rmnet_data1, link-type LINUX_SLL (Linux cooked v1), capture size 65535 bytes
+17:12:03.064808 IP (tos 0x0, ttl 64, id 55285, offset 0, flags [DF], proto ICMP (1), length 212)
+    10.200.255.210 > 8.8.4.4: ICMP echo request, id 16940, seq 2, length 192
+```
+
+Note the "ttl 64" - it's working, yay! (The traffic needs to be coming from a host behind the modem for it to really count, which this was.)
+
+### Removing TTL Override
 
 If, for some reason, you want to remove the TTL override, you would need to run:
 ```
