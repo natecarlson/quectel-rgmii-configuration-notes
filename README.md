@@ -206,14 +206,17 @@ WARNING: You're modifying files on the modem's root filesystem here. If you brea
 Note that the 192.168.225.1 address is also referenced in `/etc/ql_nf_preload.conf`; I haven't modified that file and everything seems to work, but just so ya know.
 
 ## TTL Modification
+
 This is a Linux router using iptables - so you can add iptables rules to override the outgoing TTL. Certain cell plans may require this for various reasons.
+
+It's probably worth noting that this will also work for modems connected via a USB enclosure.. what this does is directly change the TTL/HL when packets leave the modem, so it really doesn't matter how it's connected to your network.
 
 Make sure you've gained ADB access as described above.
 
 WARNING: You're modifying files on the modem's root filesystem here. If you break it, you buy it, and can keep both pieces!
 
 Files:
-* `files/ttl-override`: A simple shell script to start/stop the TTL override. Set the desired TTL with the 'TTL=' at the top of the script.
+* `files/ttl-override`: A simple shell script to start/stop the TTL override. Set the desired TTL with the 'TTLVALUE=' at the top of the script; the default is 64, which will make all packets appear as coming from the modem itself.
 * `files/ttl-override.service`: A systemd service to start said script
 
 ### Installing TTL Override:
@@ -239,9 +242,9 @@ adb shell mount -o remount,ro /
 * After it comes back up, you can verify the TTL:
 ```
 $ adb shell iptables -t mangle -vnL | grep TTL
- 1720  107K TTL        all  --  *      rmnet+  0.0.0.0/0            0.0.0.0/0            TTL set to 65
+ 1720  107K TTL        all  --  *      rmnet+  0.0.0.0/0            0.0.0.0/0            TTL set to 64
 $ adb shell ip6tables -t mangle -vnL | grep HL
-    0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 65
+    0     0 HL         all      *      rmnet+  ::/0                 ::/0                 HL set to 64
 ```
 
 If you want to validate that it's working, you can use "adb shell", and run tcpdump on the network-side interface, specifying that interface's IP as the source (feel free to do that instead of pasting my long ugly string):
