@@ -7,6 +7,10 @@ Downsides are that it's more difficult to monitor the connection state, and, wel
 
 > :warning: **WARNING**: This documentation is incomplete! I will try to get back to finish it up later; otherwise, pull requests are accepted!
 
+If you would like to support my work to document this, and help me purchase additional hardware for more hacking (without having to take one of my active modems down), you can click the link below. To be clear, please only do this if you actually want to; any future work I do will always be publicly available, and I'm not going to gate anything behind this! Well, unless you want remote support to set something up, I suppose.
+
+<a href="https://www.buymeacoffee.com/natecarlson" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
 # Table of Contents
 - [Quectel RGMII Configuration Notes](#quectel-rgmii-configuration-notes)
 - [Table of Contents](#table-of-contents)
@@ -23,6 +27,8 @@ Downsides are that it's more difficult to monitor the connection state, and, wel
   - [Getting ADB Access](#getting-adb-access)
   - [Changing modem IP address](#changing-modem-ip-address)
   - [TTL Modification](#ttl-modification)
+    - [Installing TTL Override:](#installing-ttl-override)
+    - [Removing TTL Override](#removing-ttl-override)
 
 # Hardware Recommendations
 
