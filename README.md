@@ -25,10 +25,14 @@ If you would like to support my work to document this, and help me purchase addi
   - [Changing modem IP address with AT command](#changing-modem-ip-address-with-at-command)
 - [Advanced configuration](#advanced-configuration)
   - [Getting ADB Access](#getting-adb-access)
+  - [Starting an FTP server](#starting-an-ftp-server)
   - [Changing modem IP address](#changing-modem-ip-address)
   - [TTL Modification](#ttl-modification)
     - [Installing TTL Override:](#installing-ttl-override)
     - [Removing TTL Override](#removing-ttl-override)
+  - [Other interesting things to check over ADB](#other-interesting-things-to-check-over-adb)
+    - [Making sure you're connected to the right modem](#making-sure-youre-connected-to-the-right-modem)
+    - [AT Command Access from ADB](#at-command-access-from-adb)
 
 # Hardware Recommendations
 
@@ -181,17 +185,36 @@ AT+QADBKEY="0jXKXQwSwMxYoeg"
 ```
 
 Then, to actually enable ADB, run `AT+QCFG="usbcfg"`, take the output, change the second-to-last 0 to 1, and then send the new usbcfg string to the modem (do _NOT_ just copy/paste what's below; the USB VID/PID for your modem are very likely different):
-```
+
+```control
 AT+QCFG="usbcfg"
 +QCFG: "usbcfg",0x2C7C,0x0801,1,1,1,1,1,0,0 // Initial response
 AT+QCFG="usbcfg",0x2C7C,0x0801,1,1,1,1,1,1,0 // Enable ADB
 ```
+
 And reboot with `AT+CFUN=1,1` to actually apply.
 
 Once the modem is back online, you should be able to use ADB to manage the modem on the host connect to it with USB. Basic commands:
-* `adb shell` - root shell on the modem
-* `adb pull /path/to/file` - download a file from the modem
-* `adb push /path/to/file` - upload a file to the modem
+
+- `adb shell` - root shell on the modem
+- `adb pull /path/to/file` - download a file from the modem
+- `adb push /path/to/file` - upload a file to the modem
+
+## Starting an FTP server
+
+Once you have root access to the modem, if you want you can start a temporary FTP server to let you transfer files over the network instead of adb. It will run until you ctrl-c it. Be careful here, it allows full unauthenticated access to the filesystem to whoever can access any of the IPs (if you have a routed public IP, vi that too unless you add firewall ruls!)
+
+```bash
+tcpsvd -vE 0.0.0.0 21 ftpd /
+```
+
+If you want to be able to write, add a '-w' between ftpd and the path:
+
+```bash
+tcpsvd -vE 0.0.0.0 21 ftpd /
+```
+
+When you connect via FTP, you can just leave the username and password blank.
 
 ## Changing modem IP address
 
@@ -274,3 +297,71 @@ adb shell mount -o remount,ro /
 adb shell systemctl daemon-reload
 ```
 ..no need to reboot.
+
+## Other interesting things to check over ADB
+
+### Making sure you're connected to the right modem
+
+If you have multiple modems connected to one host, as I do, it can be hard to remember which serial number is which modem. There is a file in /etc that at least shows you the model number:
+
+```
+/ # cat /etc/quectel-project-version
+Project Name: RM520NGL_VC
+Project Rev : RM520NGLAAR01A07M4G_01.201
+Branch  Name: SDX6X
+Custom  Name: STD
+Package Time: 2023-03-14,09:49
+```
+
+### AT Command Access from ADB
+
+It appears that the following processes are used to expose the serial ports via USB:
+```
+  155 root      0:00 /usr/bin/port_bridge at_mdm0 at_usb0 0
+  162 root      0:00 /usr/bin/port_bridge smd7 at_usb2 1
+```
+
+The daemon for AT over Ethernet also interfaces with smd7:
+```
+/tmp # fuser /dev/smd7
+162 809
+/tmp # ps | grep -E '(162|809)'
+  162 root      0:00 /usr/bin/port_bridge smd7 at_usb2 1
+  809 root     28:22 /usr/bin/ql_nw_service
+23314 root      0:00 grep -E (162|809)
+/tmp # lsof -p 809 2>/dev/null | grep -Ev '/usr/bin|/lib/|/dev/null|/$'
+COMMAND   PID     USER   FD      TYPE     DEVICE SIZE/OFF  NODE NAME
+ql_nw_ser 809        0    3u     unix 0x00000000      0t0 18565 type=SEQPACKET
+ql_nw_ser 809        0    4u     sock        0,8      0t0 18740 protocol: QIPCRTR
+ql_nw_ser 809        0    5r     FIFO       0,11      0t0 18741 pipe
+ql_nw_ser 809        0    6w     FIFO       0,11      0t0 18741 pipe
+ql_nw_ser 809        0    7u     sock        0,8      0t0 18863 protocol: QIPCRTR
+ql_nw_ser 809        0    8r     FIFO       0,11      0t0 18864 pipe
+ql_nw_ser 809        0    9w     FIFO       0,11      0t0 18864 pipe
+ql_nw_ser 809        0   10u      CHR      246,4      0t0  6291 /dev/smd7
+ql_nw_ser 809        0   11u     IPv4      20353      0t0   TCP *:1555 (LISTEN)
+ql_nw_ser 809        0   12u  a_inode       0,12        0  6222 [eventpoll]
+```
+
+So, a simple way to send/receive commands.. open two adb shell sessions to the modem, in one, run `cat /dev/smd7`. In the other, you run the AT commands. Example:
+
+Listening shell:
+```
+/ # cat /dev/smd7
+AT
+OK
+ATI
+Quectel
+RM520N-GL
+Revision: RM520NGLAAR01A07M4G
+
+OK
+```
+
+Command shell:
+```
+/tmp # echo -e 'AT \r' > /dev/smd7
+/tmp # echo -e 'ATI \r' > /dev/smd7
+```
+
+It appears that smd11 and at_mdm0 can also be used for this; no idea what the difference is.
