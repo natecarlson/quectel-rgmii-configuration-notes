@@ -15,6 +15,8 @@ If you would like to support my work to document this, and help me purchase addi
 - [Quectel RGMII Configuration Notes](#quectel-rgmii-configuration-notes)
 - [Table of Contents](#table-of-contents)
 - [Hardware Recommendations](#hardware-recommendations)
+- [Known issues](#known-issues)
+  - [Modem does not automatically connect at startup](#modem-does-not-automatically-connect-at-startup)
 - [Basic configuration](#basic-configuration)
   - [Additional notes](#additional-notes)
   - [AT over Ethernet](#at-over-ethernet)
@@ -57,6 +59,21 @@ Side note - this is the same adapter that is/was used in early versions of the I
 https://thewirelesshaven.com/shop/modems-hotspots/invisagig/
 
 (If you are using an Invisagig, please don't do any of the stuff mentioned below. Use their UI, or ask for support instead. You're paying a premium to not have to deal with this.)
+
+# Known issues
+
+## Modem does not automatically connect at startup
+
+This is an issue that I'm working with two people on, both with RM520's.. when you reboot the modem, it will start in CFUN=0 (minimal function) mode. To get it to connect, you need to issue `AT+CFUN=1`.
+
+If you are running into this, a quick and easy hack is to install the ttl mod, but uncomment the line in `ttl-override` (which gets pushed to `/etc/initscripts/ttl-override`):
+
+```bash
+# If your modem is starting in CFUN=0 mode, uncomment this to pass CFUN=1 to it. Hack, but we'll still keep working to figure out what is causing it.
+# echo -e "AT+CFUN=1\r\n" > /dev/smd7
+```
+
+Remove the `# ` from before the echo line.
 
 # Basic configuration
 
@@ -203,12 +220,6 @@ Once the modem is back online, you should be able to use ADB to manage the modem
 ## Starting an FTP server
 
 Once you have root access to the modem, if you want you can start a temporary FTP server to let you transfer files over the network instead of adb. It will run until you ctrl-c it. Be careful here, it allows full unauthenticated access to the filesystem to whoever can access any of the IPs (if you have a routed public IP, vi that too unless you add firewall ruls!)
-
-```bash
-tcpsvd -vE 0.0.0.0 21 ftpd /
-```
-
-If you want to be able to write, add a '-w' between ftpd and the path:
 
 ```bash
 tcpsvd -vE 0.0.0.0 21 ftpd /

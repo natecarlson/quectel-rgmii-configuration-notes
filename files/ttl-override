@@ -10,6 +10,10 @@ start)
     echo -n "Adding TTL override rules: "
     iptables -t mangle -I POSTROUTING -o rmnet+ -j TTL --ttl-set ${TTLVALUE}
     ip6tables -t mangle -I POSTROUTING -o rmnet+ -j HL --hl-set ${TTLVALUE}
+
+    # If your modem is starting in CFUN=0 mode, uncomment this to pass CFUN=1 to it. Hack, but we'll still keep working to figure out what is causing it.
+    # echo -e "AT+CFUN=1\r\n" > /dev/smd7
+
     echo "done"
     ;;
   stop)
