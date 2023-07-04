@@ -318,25 +318,38 @@ adb shell systemctl daemon-reload
 ```
 ..no need to reboot.
 
-## Enable Qualcomm Webserver 
-* Mount the root filesystem read-write:
-```
+## Enable Qualcomm Webserver
+
+> :bowtie: This section was contributed by [GitHub user aesthernr](https://github.com/aesthernr). Thanks for the contribution!
+
+Qualcomm provides their OEMs with a tool called QCMAP, which is used to manage the WAN connection, modem IP configuration, etc. They also provide a simple web interface that is supposed to be able to manage some features of the modem. On RM500Q's, it was enable by default, but didn't actually work. The pieces for it are present on the RM520, and it does work, it just needs some work to enable it!
+
+- Mount the root filesystem read-write:
+
+```bash
 adb shell mount -o remount,rw /
 ```
-* Push the files to the system:
-```
+
+- Push the files to the system:
+
+```bash
+cd /path/to/quectel-rgmii-configuration-notes/files
 adb push start_qcmap_httpd /etc/initscripts
 adb push start_qcmap_web_client_le /etc/initscripts
 adb push qcmap_httpd.service /lib/systemd/system
 adb push qcmap_web_client.service /lib/systemd/system
 ```
-* Reset the username/password to admin/admin. You will be able to update this after first login.
-```
+
+- Reset the username/password to admin/admin. You will be able to update this after first login.
+
+```bash
 adb push lighttpd.user /data/www
 adb shell chmod www-data:www-data /data/www/lighttpd.user
 ```
-* Symlink the systemd unit, reload systemd, start the service, and remount root as ro again:
-```
+
+- Symlink the systemd unit, reload systemd, start the service, and remount root as ro again:
+
+```bash
 adb shell chmod +x /etc/initscripts/start_qcmap_httpd
 adb shell chmod +x /etc/initscripts/start_qcmap_web_client_le
 adb shell ln -s /lib/systemd/system/qcmap_httpd.service /lib/systemd/system/multi-user.target.wants/
@@ -346,7 +359,8 @@ adb shell systemctl start qcmap_httpd
 adb shell systemctl start qcmap_web_client
 adb shell mount -o remount,ro /
 ```
-* Open your Browser to http://192.168.225.1/QCMAP.html
+
+- Open your Browser to [http://192.168.225.1/QCMAP.html](http://192.168.225.1/QCMAP.html) (replace the IP if necessary) - you can authenicate as admin/admin. It will prompt you to change your password after login. Note that WLAN settings will not do anything unless you have a supported wireless card connected via PCIe; that is out of scope for this document. It's also unknown if all the other functions will work as expected - however, a factory reset should wipe out all of these settings.
 
 ## Other interesting things to check over ADB
 
