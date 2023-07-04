@@ -1,0 +1,11 @@
+[Unit]
+Description= QCMAP Web Client service
+SourcePath=/etc/initscripts/start_qcmap_web_client_le
+DefaultDependencies=no
+
+[Service]
+Restart=no
+RemainAfterExit=yes
+ExecStart=/etc/initscripts/start_qcmap_web_client_le start
+ExecStop=/etc/initscripts/start_qcmap_web_client_le stop
+Nice=-20

@@ -32,6 +32,7 @@ If you would like to support my work to document this, and help me purchase addi
   - [TTL Modification](#ttl-modification)
     - [Installing TTL Override:](#installing-ttl-override)
     - [Removing TTL Override](#removing-ttl-override)
+  - [Enable Qualcomm Webserver](#enable-qualcomm-webserver)
   - [Other interesting things to check over ADB](#other-interesting-things-to-check-over-adb)
     - [Making sure you're connected to the right modem](#making-sure-youre-connected-to-the-right-modem)
     - [AT Command Access from ADB](#at-command-access-from-adb)
@@ -316,6 +317,36 @@ adb shell mount -o remount,ro /
 adb shell systemctl daemon-reload
 ```
 ..no need to reboot.
+
+## Enable Qualcomm Webserver 
+* Mount the root filesystem read-write:
+```
+adb shell mount -o remount,rw /
+```
+* Push the files to the system:
+```
+adb push start_qcmap_httpd /etc/initscripts
+adb push start_qcmap_web_client_le /etc/initscripts
+adb push qcmap_httpd.service /lib/systemd/system
+adb push qcmap_web_client.service /lib/systemd/system
+```
+* Reset the username/password to admin/admin. You will be able to update this after first login.
+```
+adb push lighttpd.user /data/www
+adb shell chmod www-data:www-data /data/www/lighttpd.user
+```
+* Symlink the systemd unit, reload systemd, start the service, and remount root as ro again:
+```
+adb shell chmod +x /etc/initscripts/start_qcmap_httpd
+adb shell chmod +x /etc/initscripts/start_qcmap_web_client_le
+adb shell ln -s /lib/systemd/system/qcmap_httpd.service /lib/systemd/system/multi-user.target.wants/
+adb shell ln -s /lib/systemd/system/qcmap_web_client.service /lib/systemd/system/multi-user.target.wants/
+adb shell systemctl daemon-reload
+adb shell systemctl start qcmap_httpd
+adb shell systemctl start qcmap_web_client
+adb shell mount -o remount,ro /
+```
+* Open your Browser to http://192.168.225.1/QCMAP.html
 
 ## Other interesting things to check over ADB
 

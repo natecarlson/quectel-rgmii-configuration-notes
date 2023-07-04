@@ -1,0 +1,25 @@
+#! /bin/sh
+set -e
+
+case "$1" in
+  start)
+        echo -n "Starting QCMAP HTTPD: "
+        start-stop-daemon -S -b -a /usr/sbin/httpd -- -f -h /WEBSERVER/www -p 80
+        echo "done"
+        ;;
+  stop)
+        echo -n "Stopping QCMAP HTTPD: "
+        start-stop-daemon -K -n /usr/sbin/httpd
+        echo "done"
+        ;;
+  restart)
+        $0 stop
+        $0 start
+        ;;
+  *)
+        echo "Usage QCMAP_httpd { start | stop | restart}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

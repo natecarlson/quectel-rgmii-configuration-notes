@@ -1,0 +1,11 @@
+[Unit]
+Description= httpd service
+SourcePath=/etc/initscripts/start_qcmap_httpd
+DefaultDependencies=no
+
+[Service]
+Restart=no
+RemainAfterExit=yes
+ExecStart=/etc/initscripts/start_qcmap_httpd start
+ExecStop=/etc/initscripts/start_qcmap_httpd stop
+Nice=-20
