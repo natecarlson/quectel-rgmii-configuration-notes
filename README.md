@@ -217,15 +217,23 @@ Once the modem is back online, you should be able to use ADB to manage the modem
 - `adb pull /path/to/file` - download a file from the modem
 - `adb push /path/to/file` - upload a file to the modem
 
+So far, I have been unsuccessful with my attempts to get ADB to listen on the ethernet interface. Warning - `adb tcp <port>` will crash both ADB and all the other serial ports expoised via USB until the modem is restarted.
+
 ## Starting an FTP server
 
-Once you have root access to the modem, if you want you can start a temporary FTP server to let you transfer files over the network instead of adb. It will run until you ctrl-c it. Be careful here, it allows full unauthenticated access to the filesystem to whoever can access any of the IPs (if you have a routed public IP, vi that too unless you add firewall ruls!)
+Once you have root access to the modem, if you want you can start a temporary FTP server to let you transfer files over the network instead of adb. It will run until you ctrl-c it. Be careful here, it allows full unauthenticated access to the filesystem to whoever can access any of the IPs (if you have a routed public IP, vi that too unless you add firewall rules!) You can change the IP to the modem's LAN address (192.168.225.1 by default) if you'd like.
 
 ```bash
 tcpsvd -vE 0.0.0.0 21 ftpd /
 ```
 
 When you connect via FTP, you can just leave the username and password blank.
+
+Note that the BusyBox binary on the modem is compiled without FTP write support. If you would like to enable write support, you can copy files/busybox-armv7l somewhere on the modem (anything under /usrdata is persistent; for this example I created /usrdata/bin), and call that binary instead, with a '-w' flag between ftpd and /; I would also recommend using the current busybox for tcpsvd. You'll also need to add '-A' to ftpd for anonymous access. Example command:
+
+```bash
+/usrdata/bin/busybox-armv7l tcpsvd -xE 0.0.0.0 21 /usrdata/bin/busybox-armv7l ftpd -wA /
+```
 
 ## Changing modem IP address
 
