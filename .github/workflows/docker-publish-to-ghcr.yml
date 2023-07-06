@@ -45,7 +45,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4.0.0
         with:
-          context: build-docker
+          context: ./build-docker
           file: Dockerfile.rm520-build-env
           push: true
           tags: ${{ steps.meta.outputs.tags }}
