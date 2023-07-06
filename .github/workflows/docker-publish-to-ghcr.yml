@@ -46,7 +46,7 @@ jobs:
         uses: docker/build-push-action@v4.0.0
         with:
           context: ./build-docker
-          file: Dockerfile.rm520-build-env
+          file: ./build-docker/Dockerfile.rm520-build-env
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
