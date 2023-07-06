@@ -12,6 +12,7 @@ name: Create and publish a Docker image
 on:
   push:
     branches: ['production']
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
