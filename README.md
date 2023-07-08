@@ -334,8 +334,6 @@ adb shell mount -o remount,rw /
 
 ```bash
 cd /path/to/quectel-rgmii-configuration-notes/files
-adb push start_qcmap_httpd /etc/initscripts
-adb push start_qcmap_web_client_le /etc/initscripts
 adb push qcmap_httpd.service /lib/systemd/system
 adb push qcmap_web_client.service /lib/systemd/system
 ```
