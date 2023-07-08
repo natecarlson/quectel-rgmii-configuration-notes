@@ -428,4 +428,4 @@ Command shell:
 /tmp # echo -e 'ATI \r' > /dev/smd7
 ```
 
-It appears that smd11 and at_mdm0 can also be used for this; no idea what the difference is.
+It appears that smd11 and at_mdm0 can also be used for this. On a default-ish modem, it appears that smd7 and at_mdm0 are both used by running daemons, so I picked smd11 for my AT daemon. There is a service called 'quectel-uart-smd.service', in it's unit file it disables the quectel_uart_smd, and says that smd11 is used by MCM_atcop_svc. However, I see no signs of that on the system.. so I think it's probably the safest to use.
