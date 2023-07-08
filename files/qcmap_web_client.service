@@ -1,11 +1,11 @@
 [Unit]
-Description= QCMAP Web Client service
-SourcePath=/etc/initscripts/start_qcmap_web_client_le
-DefaultDependencies=no
+Description=QCMAP Web Client service
+After=ql-netd.service
 
 [Service]
-Restart=no
-RemainAfterExit=yes
-ExecStart=/etc/initscripts/start_qcmap_web_client_le start
-ExecStop=/etc/initscripts/start_qcmap_web_client_le stop
-Nice=-20
+ExecStart=/usr/bin/QCMAP_Web_CLIENT
+Restart=yes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
