@@ -33,6 +33,7 @@ If you would like to support my work to document this, and help me purchase addi
     - [Installing TTL Override:](#installing-ttl-override)
     - [Removing TTL Override](#removing-ttl-override)
   - [Enable Qualcomm Webserver](#enable-qualcomm-webserver)
+  - [Enable journald logging](#enable-journald-logging)
   - [Other interesting things to check over ADB](#other-interesting-things-to-check-over-adb)
     - [Making sure you're connected to the right modem](#making-sure-youre-connected-to-the-right-modem)
     - [AT Command Access from ADB](#at-command-access-from-adb)
@@ -359,6 +360,77 @@ adb shell mount -o remount,ro /
 ```
 
 - Open your Browser to [http://192.168.225.1/QCMAP.html](http://192.168.225.1/QCMAP.html) (replace the IP if necessary) - you can authenicate as admin/admin. It will prompt you to change your password after login. Note that WLAN settings will not do anything unless you have a supported wireless card connected via PCIe; that is out of scope for this document. It's also unknown if all the other functions will work as expected - however, a factory reset should wipe out all of these settings.
+
+## Enable journald logging
+
+By default, journald is masked on the modem - IE, nothing systemd does will end up having persistent logs. To fix this, we need to manually modify files in the root filesystem, as /etc isn't available at the point this is started.
+
+Before enabling, I would recommend modifying /lib/systemd/journald.conf.d/00-systemd-conf.conf with some tweaks to prevent it from using lots of space:
+
+```bash
+adb shell mount -o remount,rw /
+adb shell
+# vi /lib/systemd/journald.conf.d/00-systemd-conf.conf
+###edit params as below, and then save changes, and exit the shell###
+adb shell mount -o remount,ro /
+```
+
+The config file by default has:
+
+```bash
+[Journal]
+ForwardToSyslog=yes
+RuntimeMaxUse=64M
+```
+
+I would recommend:
+
+```bash
+[Journal]
+ForwardToSyslog=no
+RuntimeMaxUse=16M
+Storage=volatile
+# Lots of spammy units, so limit the logging bursts.
+RateLimitIntervalSec=5m
+RateLimitBurst=100
+```
+
+This disables forwarding to the syslog daemon (to avoid taking up space twice), forces runtime (RAM) storage, and limits it to 16mb. It also enables fairly aggressive rate limiting, so that apps like ipacm won't force constant rotation.  (Each service gets its own rate limit.)
+
+Here's how to enable the service:
+
+```bash
+adb shell mount -o remount,rw /
+adb shell rm /lib/systemd/system/sysinit.target.wants/systemd-journald.service /lib/systemd/system/sockets.target.wants/systemd-journald.socket /lib/systemd/system/sockets.target.wants/systemd-journald-dev-log.socket
+adb shell ln -s /lib/systemd/system/systemd-journald.service /lib/systemd/system/sysinit.target.wants/systemd-journald.service
+adb shell ln -s /lib/systemd/system/systemd-journald.socket /lib/systemd/system/sockets.target.wants/systemd-journald.socket
+adb shell systemctl daemon-reload
+adb shell systemctl start systemd-journald.socket systemd-journald.service systemd-journald-dev-log.socket
+# Also, to avoid lots of junk about write perms on unit files.. if you push the systemd units from a windows box, you might need to clean this up more often!
+adb shell chmod 644 /lib/systemd/system/*.service /lib/systemd/system/*.socket /lib/systemd/system/*.conf
+adb shell chmod 644 /lib/systemd/system/dbus.service.d/dbus.conf /lib/systemd/system/systemrw.mount.d/systemrw.conf
+adb shell mount -o remount,ro /
+```
+
+Then, we have to unmount the mounted /etc directory, and remove the underlying masking of journald. We'll need to reboot the system to get the real /etc back:
+
+```bash
+adb shell umount -l /etc
+adb shell mount -o remount,rw /
+adb shell rm /etc/systemd/system/systemd-journald.service
+adb shell mount -o remount,ro /
+adb shell sync
+adb shell reboot -f
+```
+
+If you also want to enable audit logs, also do the following as part of the above:
+
+```bash
+adb shell rm /lib/systemd/system/sockets.target.wants/systemd-journald-audit.socket
+adb shell ln -s /lib/systemd/system/systemd-journald-audit.socket /lib/systemd/system/sockets.target.wants/systemd-journald-audit.socket
+```
+
+I am leaving systemd-journal-flush disabled (masked), as we don't want to write the logging data to persistent storage. Well - if you do you can change the Storage to "persistent" in the config file, and also symlink the systemd-journal-flush to actually switch from volitile to persistent storage on bootup.
 
 ## Other interesting things to check over ADB
 
