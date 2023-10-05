@@ -196,7 +196,7 @@ AT+QADBKEY?
 OK
 ```
 
-You then can head over to the Quectel forums (https://forums.quectel.com/), create an account, and post asking for the key. There are also tools available on the great wide internet that will generate the key for previous modems.. but they don't quite work for RM5XX's; the result is a little bit too long.
+You then can head over to the Quectel forums (https://forums.quectel.com/), create an account, and post asking for the key. There are also tools available on the great wide internet that will generate the key. Example: (http://github.com/carp4/qadbkey-unlock).
 
 Once you have received the unlock key, you apply it like:
 ```
